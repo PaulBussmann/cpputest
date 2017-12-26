@@ -76,4 +76,18 @@ protected:
 
 };
 
+class JUnitTestOutputSingleSuite : public JUnitTestOutput
+{
+public:
+	JUnitTestOutputSingleSuite();
+	virtual ~JUnitTestOutputSingleSuite();
+	virtual void writeTestSuiteSummary();
+	virtual void writeTestCases();
+	virtual void writeTestGroupToFile() _override;
+	virtual void printCurrentGroupEnded(const TestResult& res) _override;
+	virtual void printTestsEnded(const TestResult& result) _override;
+protected:
+	SimpleString hostname_;
+};
+
 #endif

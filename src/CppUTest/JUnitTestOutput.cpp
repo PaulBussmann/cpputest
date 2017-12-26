@@ -39,6 +39,7 @@ struct JUnitTestCaseResultNode
     }
 
     SimpleString name_;
+	SimpleString group_;
     long execTime_;
     TestFailure* failure_;
     bool ignored_;
@@ -142,6 +143,7 @@ void JUnitTestOutput::printCurrentTestStarted(const UtestShell& test)
         impl_->results_.tail_ = impl_->results_.tail_->next_;
     }
     impl_->results_.tail_->name_ = test.getName();
+	impl_->results_.tail_->group_ = impl_->results_.group_;
     impl_->results_.tail_->file_ = test.getFile();
     impl_->results_.tail_->lineNumber_ = test.getLineNumber();
     if (!test.willRun()) {
@@ -296,4 +298,83 @@ void JUnitTestOutput::writeToFile(const SimpleString& buffer)
 void JUnitTestOutput::closeFile()
 {
     PlatformSpecificFClose(impl_->file_);
+}
+
+JUnitTestOutputSingleSuite::JUnitTestOutputSingleSuite()
+{
+#ifdef _MSC_VER
+	hostname_ = getenv("COMPUTERNAME");
+#else
+	hostname_ = getenv("HOSTNAME");
+#endif
+	if ("" == hostname_) {
+		hostname_ = "localhost";
+	}
+}
+
+JUnitTestOutputSingleSuite::~JUnitTestOutputSingleSuite()
+{
+}
+
+void JUnitTestOutputSingleSuite::writeTestGroupToFile()
+{
+}
+
+void JUnitTestOutputSingleSuite::printCurrentGroupEnded(const TestResult& result)
+{
+	impl_->results_.groupExecTime_ += result.getCurrentGroupTotalExecutionTime();
+}
+
+void JUnitTestOutputSingleSuite::writeTestSuiteSummary()
+{
+	SimpleString
+		buf =
+		StringFromFormat(
+			"<testsuite errors=\"0\" failures=\"%d\" hostname=\"%s\" name=\"%s\" tests=\"%d\" time=\"%d.%03d\" timestamp=\"%s\">\n",
+			impl_->results_.failureCount_,
+			hostname_.asCharString(),
+			impl_->package_.asCharString(),
+			impl_->results_.testCount_,
+			(int)(impl_->results_.groupExecTime_ / 1000), (int)(impl_->results_.groupExecTime_ % 1000),
+			GetPlatformSpecificTimeString());
+	writeToFile(buf.asCharString());
+}
+
+void JUnitTestOutputSingleSuite::writeTestCases()
+{
+	JUnitTestCaseResultNode* cur = impl_->results_.head_;
+
+	while (cur) {
+		SimpleString buf = StringFromFormat(
+		    "<testcase classname=\"%s\" name=\"%s\" assertions=\"%d\" time=\"%d.%03d\" file=\"%s\" line=\"%d\">\n",
+			cur->group_.asCharString(),
+			cur->name_.asCharString(),
+			cur->checkCount_ - impl_->results_.totalCheckCount_,
+			(int)(cur->execTime_ / 1000), (int)(cur->execTime_ % 1000),
+			cur->file_.asCharString(),
+			cur->lineNumber_);
+		writeToFile(buf.asCharString());
+
+		impl_->results_.totalCheckCount_ = cur->checkCount_;
+
+		if (cur->failure_) {
+			writeFailure(cur);
+		}
+		else if (cur->ignored_) {
+			writeToFile("<skipped />\n");
+		}
+		writeToFile("</testcase>\n");
+		cur = cur->next_;
+	}
+}
+
+void JUnitTestOutputSingleSuite::printTestsEnded(const TestResult& /*result*/)
+{
+	openFileForWrite("cpputest_junit.xml");
+	writeXmlHeader();
+	writeTestSuiteSummary();
+	writeProperties();
+	writeTestCases();
+	writeFileEnding();
+	closeFile();
 }

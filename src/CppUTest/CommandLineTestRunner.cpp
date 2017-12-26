@@ -133,7 +133,7 @@ TestOutput* CommandLineTestRunner::createTeamCityOutput()
 
 TestOutput* CommandLineTestRunner::createJUnitOutput(const SimpleString& packageName)
 {
-    JUnitTestOutput* junitOutput = new JUnitTestOutput;
+    JUnitTestOutput* junitOutput = new JUnitTestOutputSingleSuite;
     if (junitOutput != NULL) {
       junitOutput->setPackageName(packageName);
     }
