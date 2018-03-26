@@ -37,7 +37,7 @@ class UtestShell;
 class MockSupport;
 
 /* This allows access to "the global" mocking support for easier testing */
-MockSupport& mock(const SimpleString& mockName = "", MockFailureReporter* failureReporterForThisCall = NULL);
+MockSupport& mock(const SimpleString& mockName = "", MockFailureReporter* failureReporterForThisCall = NULLPTR);
 
 class MockSupport
 {
@@ -83,6 +83,7 @@ public:
     void setData(const SimpleString& name, const void* value);
     void setData(const SimpleString& name, void (*value)());
     void setDataObject(const SimpleString& name, const SimpleString& type, void* value);
+    void setDataConstObject(const SimpleString& name, const SimpleString& type, const void* value);
     MockNamedValue getData(const SimpleString& name);
 
     MockSupport* getMockSupportScope(const SimpleString& name);
@@ -135,7 +136,6 @@ private:
     bool ignoreOtherCalls_;
     bool enabled_;
     MockCheckedActualCall *lastActualFunctionCall_;
-    MockExpectedCallComposite compositeCalls_;
     MockNamedValueComparatorsAndCopiersRepository comparatorsAndCopiersRepository_;
     MockNamedValueList data_;
     const SimpleString mockName_;
@@ -144,7 +144,7 @@ private:
 
     void checkExpectationsOfLastActualCall();
     bool wasLastActualCallFulfilled();
-    void failTestWithUnexpectedCalls();
+    void failTestWithExpectedCallsNotFulfilled();
     void failTestWithOutOfOrderCalls();
 
     MockNamedValue* retrieveDataFromStore(const SimpleString& name);

@@ -30,14 +30,14 @@
 #include "CppUTest/PlatformSpecificFunctions.h"
 
 
-MockNamedValueComparatorsAndCopiersRepository* MockNamedValue::defaultRepository_ = NULL;
+MockNamedValueComparatorsAndCopiersRepository* MockNamedValue::defaultRepository_ = NULLPTR;
 
 void MockNamedValue::setDefaultComparatorsAndCopiersRepository(MockNamedValueComparatorsAndCopiersRepository* repository)
 {
     defaultRepository_ = repository;
 }
 
-MockNamedValue::MockNamedValue(const SimpleString& name) : name_(name), type_("int"), size_(0), comparator_(NULL), copier_(NULL)
+MockNamedValue::MockNamedValue(const SimpleString& name) : name_(name), type_("int"), size_(0), comparator_(NULLPTR), copier_(NULLPTR)
 {
     value_.intValue_ = 0;
 }
@@ -113,7 +113,18 @@ void MockNamedValue::setMemoryBuffer(const unsigned char* value, size_t size)
     size_ = size;
 }
 
-void MockNamedValue::setObjectPointer(const SimpleString& type, const void* objectPtr)
+void MockNamedValue::setConstObjectPointer(const SimpleString& type, const void* objectPtr)
+{
+    type_ = type;
+    value_.constObjectPointerValue_ = objectPtr;
+    if (defaultRepository_)
+    {
+        comparator_ = defaultRepository_->getComparatorForType(type);
+        copier_ = defaultRepository_->getCopierForType(type);
+    }
+}
+
+void MockNamedValue::setObjectPointer(const SimpleString& type, void* objectPtr)
 {
     type_ = type;
     value_.objectPointerValue_ = objectPtr;
@@ -231,7 +242,12 @@ const unsigned char* MockNamedValue::getMemoryBuffer() const
     return value_.memoryBufferValue_;
 }
 
-const void* MockNamedValue::getObjectPointer() const
+const void* MockNamedValue::getConstObjectPointer() const
+{
+    return value_.constObjectPointerValue_;
+}
+
+void* MockNamedValue::getObjectPointer() const
 {
     return value_.objectPointerValue_;
 }
@@ -258,25 +274,25 @@ bool MockNamedValue::equals(const MockNamedValue& p) const
     else if((type_ == "int") && (p.type_ == "long int"))
         return value_.intValue_ == p.value_.longIntValue_;
     else if((type_ == "unsigned int") && (p.type_ == "int"))
-        return (long)value_.unsignedIntValue_ == (long)p.value_.intValue_;
+        return (p.value_.intValue_ >= 0) && (value_.unsignedIntValue_ == (unsigned int)p.value_.intValue_);
     else if((type_ == "int") && (p.type_ == "unsigned int"))
-        return (long)value_.intValue_ == (long)p.value_.unsignedIntValue_;
+        return (value_.intValue_ >= 0) && ((unsigned int)value_.intValue_ == p.value_.unsignedIntValue_);
     else if((type_ == "unsigned long int") && (p.type_ == "int"))
-        return value_.unsignedLongIntValue_ == (unsigned long)p.value_.intValue_;
+        return (p.value_.intValue_ >= 0) && (value_.unsignedLongIntValue_ == (unsigned long)p.value_.intValue_);
     else if((type_ == "int") && (p.type_ == "unsigned long int"))
-        return (unsigned long)value_.intValue_ == p.value_.unsignedLongIntValue_;
+        return (value_.intValue_ >= 0) && ((unsigned long)value_.intValue_ == p.value_.unsignedLongIntValue_);
     else if((type_ == "unsigned int") && (p.type_ == "long int"))
-        return (long int)value_.unsignedIntValue_ == p.value_.longIntValue_;
+        return (p.value_.longIntValue_ >= 0) && (value_.unsignedIntValue_ == (unsigned long)p.value_.longIntValue_);
     else if((type_ == "long int") && (p.type_ == "unsigned int"))
-        return value_.longIntValue_ == (long int)p.value_.unsignedIntValue_;
+        return (value_.longIntValue_ >= 0) && ((unsigned long)value_.longIntValue_ == p.value_.unsignedIntValue_);
     else if((type_ == "unsigned int") && (p.type_ == "unsigned long int"))
         return value_.unsignedIntValue_ == p.value_.unsignedLongIntValue_;
     else if((type_ == "unsigned long int") && (p.type_ == "unsigned int"))
         return value_.unsignedLongIntValue_ == p.value_.unsignedIntValue_;
     else if((type_ == "long int") && (p.type_ == "unsigned long int"))
-        return (value_.longIntValue_ >= 0) && (value_.longIntValue_ == (long) p.value_.unsignedLongIntValue_);
+        return (value_.longIntValue_ >= 0) && ((unsigned long)value_.longIntValue_ == p.value_.unsignedLongIntValue_);
     else if((type_ == "unsigned long int") && (p.type_ == "long int"))
-        return (p.value_.longIntValue_ >= 0) && ((long)value_.unsignedLongIntValue_ == p.value_.longIntValue_);
+        return (p.value_.longIntValue_ >= 0) && (value_.unsignedLongIntValue_ == (unsigned long) p.value_.longIntValue_);
 
     if (type_ != p.type_) return false;
 
@@ -309,7 +325,7 @@ bool MockNamedValue::equals(const MockNamedValue& p) const
     }
 
     if (comparator_)
-        return comparator_->isEqual(value_.objectPointerValue_, p.value_.objectPointerValue_);
+        return comparator_->isEqual(value_.constObjectPointerValue_, p.value_.constObjectPointerValue_);
 
     return false;
 }
@@ -350,7 +366,7 @@ SimpleString MockNamedValue::toString() const
         return StringFromBinaryWithSizeOrNull(value_.memoryBufferValue_, size_);
 
     if (comparator_)
-        return comparator_->valueToString(value_.objectPointerValue_);
+        return comparator_->valueToString(value_.constObjectPointerValue_);
 
     return StringFromFormat("No comparator found for type: \"%s\"", type_.asCharString());
 
@@ -377,7 +393,7 @@ void MockNamedValueListNode::destroy()
 }
 
 MockNamedValueListNode::MockNamedValueListNode(MockNamedValue* newValue)
-    : data_(newValue), next_(NULL)
+    : data_(newValue), next_(NULLPTR)
 {
 }
 
@@ -391,7 +407,7 @@ SimpleString MockNamedValueListNode::getType() const
     return data_->getType();
 }
 
-MockNamedValueList::MockNamedValueList() : head_(NULL)
+MockNamedValueList::MockNamedValueList() : head_(NULLPTR)
 {
 }
 
@@ -408,7 +424,7 @@ void MockNamedValueList::clear()
 void MockNamedValueList::add(MockNamedValue* newValue)
 {
     MockNamedValueListNode* newNode = new MockNamedValueListNode(newValue);
-    if (head_ == NULL)
+    if (head_ == NULLPTR)
         head_ = newNode;
     else {
         MockNamedValueListNode* lastNode = head_;
@@ -422,7 +438,7 @@ MockNamedValue* MockNamedValueList::getValueByName(const SimpleString& name)
     for (MockNamedValueListNode * p = head_; p; p = p->next())
         if (p->getName() == name)
             return p->item();
-    return NULL;
+    return NULLPTR;
 }
 
 MockNamedValueListNode* MockNamedValueList::begin()
@@ -433,9 +449,9 @@ MockNamedValueListNode* MockNamedValueList::begin()
 struct MockNamedValueComparatorsAndCopiersRepositoryNode
 {
     MockNamedValueComparatorsAndCopiersRepositoryNode(const SimpleString& name, MockNamedValueComparator* comparator, MockNamedValueComparatorsAndCopiersRepositoryNode* next)
-        : name_(name), comparator_(comparator), copier_(NULL), next_(next) {}
+        : name_(name), comparator_(comparator), copier_(NULLPTR), next_(next) {}
     MockNamedValueComparatorsAndCopiersRepositoryNode(const SimpleString& name, MockNamedValueCopier* copier, MockNamedValueComparatorsAndCopiersRepositoryNode* next)
-        : name_(name), comparator_(NULL), copier_(copier), next_(next) {}
+        : name_(name), comparator_(NULLPTR), copier_(copier), next_(next) {}
     MockNamedValueComparatorsAndCopiersRepositoryNode(const SimpleString& name, MockNamedValueComparator* comparator, MockNamedValueCopier* copier, MockNamedValueComparatorsAndCopiersRepositoryNode* next)
         : name_(name), comparator_(comparator), copier_(copier), next_(next) {}
     SimpleString name_;
@@ -444,7 +460,7 @@ struct MockNamedValueComparatorsAndCopiersRepositoryNode
     MockNamedValueComparatorsAndCopiersRepositoryNode* next_;
 };
 
-MockNamedValueComparatorsAndCopiersRepository::MockNamedValueComparatorsAndCopiersRepository() : head_(NULL)
+MockNamedValueComparatorsAndCopiersRepository::MockNamedValueComparatorsAndCopiersRepository() : head_(NULLPTR)
 {
 
 }
@@ -477,14 +493,14 @@ MockNamedValueComparator* MockNamedValueComparatorsAndCopiersRepository::getComp
 {
     for (MockNamedValueComparatorsAndCopiersRepositoryNode* p = head_; p; p = p->next_)
             if (p->name_ == name && p->comparator_) return p->comparator_;
-    return NULL;
+    return NULLPTR;
 }
 
 MockNamedValueCopier* MockNamedValueComparatorsAndCopiersRepository::getCopierForType(const SimpleString& name)
 {
     for (MockNamedValueComparatorsAndCopiersRepositoryNode* p = head_; p; p = p->next_)
             if (p->name_ == name && p->copier_) return p->copier_;
-    return NULL;
+    return NULLPTR;
 }
 
 void MockNamedValueComparatorsAndCopiersRepository::installComparatorsAndCopiers(const MockNamedValueComparatorsAndCopiersRepository& repository)
