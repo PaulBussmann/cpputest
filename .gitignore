@@ -84,3 +84,8 @@ cpputest_*.xml
 #IAR automatically generated files
 *.dep
 *.ewt
+CMakeFiles/
+.vs/
+.tup/
+CMakeCache.txt
+env.txt
