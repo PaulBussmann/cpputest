@@ -38,6 +38,8 @@
 #include "CppUTest/TestRegistry.h"
 #include "CppUTest/TestOutput.h"
 
+void CppUnitTestTestMethodInitialize(UtestShell* pShell);
+
 #define INVOKE_CPPUTEST_TEST(testGroup, testName) \
 TEST_METHOD(##testGroup##_##testName##) {\
     TEST_##testGroup##_##testName##_Test oTest; \
@@ -56,7 +58,8 @@ TEST_METHOD(##testGroup##_##testName##) {\
   class TEST_##testGroup##_##testName##_TestShell : public UtestShell { \
       virtual Utest* createTest() _override { return new TEST_##testGroup##_##testName##_Test; } \
   } TEST_##testGroup##_##testName##_TestShell_instance; \
-  TEST_CLASS(TEST_CLASS_##testGroup##_##testName##) { \
+  TEST_CLASS(TEST_CLASS_##testGroup##_##testName##) { public:\
+    TEST_METHOD_INITIALIZE(TestInitialize) {CppUnitTestTestMethodInitialize(&TEST_##testGroup##_##testName##_TestShell_instance);}\
     INVOKE_CPPUTEST_TEST(##testGroup##,##testName##); \
   }; \
   static TestInstaller TEST_##testGroup##_##testName##_Installer(TEST_##testGroup##_##testName##_TestShell_instance, #testGroup, #testName, __FILE__,__LINE__); \
@@ -81,6 +84,10 @@ TEST_METHOD(##testGroup##_##testName##) {\
 
 #undef  CHECK_EQUAL
 #define CHECK_EQUAL(expected, actual)\
+  CHECK_EQUAL_LOCATION(expected, actual, __FILE__, __LINE__)
+
+#undef  LONGS_EQUAL
+#define LONGS_EQUAL(expected, actual)\
   CHECK_EQUAL_LOCATION(expected, actual, __FILE__, __LINE__)
 
 #undef MEMCMP_EQUAL_LOCATION
