@@ -77,13 +77,13 @@
       </DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT /NODEFAULTLIB:MSVCRTD %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>../../lib/CppUTest.lib;../ApplicationLib/$(Configuration)/ApplicationLib.lib;odbc32.lib;odbccp32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>./$(Configuration)/AllTests.exe</OutputFile>
+      <AdditionalDependencies>../../lib/Windows/VS2017/x86/$(Configuration)/CppUTest.lib;../../lib/Windows/VS2017/x86/$(Configuration)/ApplicationLib.lib;odbc32.lib;odbccp32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)\AllTests.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ManifestFile>./$(Configuration)/$(TargetFileName).intermediate.manifest</ManifestFile>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -98,7 +98,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(Configuration)/AllTests.bsc</OutputFile>
+      <OutputFile>$(OutDir)\AllTests.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>"$(TargetPath)"</Command>
@@ -130,8 +130,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>../../lib/CppUTest_VS2017d.lib;../ApplicationLib/$(Configuration)/ApplicationLib.lib;odbc32.lib;odbccp32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>./$(Configuration)/AllTests.exe</OutputFile>
+      <AdditionalDependencies>../../lib/Windows/VS2017/x86/$(Configuration)/CppUTestD.lib;../../lib/Windows/VS2017/x86/$(Configuration)/ApplicationLib.lib;odbc32.lib;odbccp32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)\AllTests.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ManifestFile>./$(Configuration)/$(TargetFileName).intermediate.manifest</ManifestFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -144,7 +144,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Debug/AllTests.bsc</OutputFile>
+      <OutputFile>$(OutDir)\AllTests.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>$(TargetPath)</Command>
